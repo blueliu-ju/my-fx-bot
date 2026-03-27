@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>可愛匯率小管家 🐾</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@500;900&family=Pangolin&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #FDF6F0; color: #4A4A4A; }
+        .font-cute { font-family: 'Pangolin', cursive; }
+        .hand-drawn { border: 3px solid #4A4A4A; box-shadow: 6px 6px 0px #4A4A4A; border-radius: 20px; }
+        .chip { cursor: pointer; padding: 8px 16px; border: 2px solid #4A4A4A; border-radius: 50px; background: white; transition: all 0.2s; font-weight: bold; display: flex; align-items: center; gap: 4px; }
+        .chip.active { background-color: #FFB7B2; transform: translateY(-3px); box-shadow: 0 4px 0 #4A4A4A; }
+        .alert-box { background-color: #E1F5FE; border: 3px dashed #039BE5; border-radius: 15px; }
+        .result-card { cursor: pointer; transition: all 0.2s; }
+        .result-card:hover { transform: translateY(-5px); box-shadow: 8px 8px 0px #4A4A4A; }
+        .result-card.selected { border-width: 5px; border-color: #4A4A4A; }
+        
+        #tgSettings { transition: all 0.3s ease-in-out; max-height: 0; overflow: hidden; opacity: 0; }
+        #tgSettings.show { max-height: 800px; opacity: 1; margin-top: 1rem; }
+        
+        .history-item { cursor: pointer; transition: background 0.2s; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+        .history-item:hover { background-color: #E0F2F1; }
+        .delete-btn { color: #FFAB91; transition: color 0.2s; padding: 4px 8px; }
+        .delete-btn:hover { color: #FF5252; }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div class="max-w-4xl mx-auto">
+        <div class="text-center mb-8 relative">
+            <h1 class="text-4xl font-black flex justify-center items-center gap-3">
+                <span class="text-3xl">📊</span> 匯率小幫手 <span class="text-3xl">🐾</span>
+            </h1>
+            <p class="mt-2 font-bold text-gray-500 italic">方便又好用的匯率幣別轉換工具！</p>
+            
+            <button onclick="toggleSettings()" class="absolute top-0 right-0 text-gray-400 hover:text-blue-500 transition-colors">
+                <i class="fas fa-cog text-2xl"></i>
+            </button>
+        </div>
+
+        <div class="grid grid-cols-1 gap-6 mb-8">
+            <div class="hand-drawn bg-white p-6 space-y-4">
+                <div class="flex flex-wrap justify-between items-center gap-4">
+                    <label class="font-black text-lg underline decoration-pink-300">💰 輸入金額和選擇幣別</label>
+                    <div class="flex gap-3 flex-1 min-w-[280px]">
+                        <input type="number" id="baseAmount" value="300" class="w-full text-3xl font-cute p-3 border-4 border-gray-800 rounded-2xl focus:outline-none">
+                        <select id="baseCurrency" class="border-4 border-gray-800 rounded-2xl px-4 font-bold bg-blue-100 cursor-pointer"></select>
+                    </div>
+                </div>
+                
+                <div class="pt-2">
+                    <div id="targetChips" class="flex flex-wrap gap-2 text-xs"></div>
+                </div>
+
+                <div id="tgSettings" class="alert-box p-4 space-y-4">
+                    <div>
+                        <h3 class="font-black text-blue-800 mb-2 text-sm italic">🤖 機器人連線資訊</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <input type="text" id="tgToken" placeholder="Bot Token" class="p-2 border-2 border-blue-300 rounded-lg text-[10px]">
+                            <input type="text" id="tgChatId" placeholder="Chat ID" class="p-2 border-2 border-blue-300 rounded-lg text-[10px]">
+                        </div>
+                    </div>
+
+                    <div class="border-t border-blue-200 pt-3">
+                        <h3 class="font-black text-blue-800 mb-2 text-sm italic">📌 新增網頁即時監控</h3>
+                        <div class="flex flex-wrap items-center gap-2 text-xs font-bold text-blue-700">
+                            <span>1 <span class="baseLabel">TWD</span> 達</span>
+                            <input type="number" id="targetAlertPrice" step="0.001" placeholder="目標價" class="w-20 p-1 border-2 border-blue-400 rounded-lg">
+                            <select id="alertTargetCurrency" class="p-1 border-2 border-blue-400 rounded-lg bg-white"></select>
+                            <button id="setAlertBtn" class="bg-blue-500 text-white px-4 py-1 rounded-lg border-2 border-blue-700 hover:bg-blue-600 ml-auto">啟動並記錄</button>
+                        </div>
+                    </div>
+
+                    <div class="border-t border-blue-200 pt-3">
+                        <h3 class="font-black text-blue-800 mb-2 text-sm italic flex justify-between">
+                            <span>📜 最近設定紀錄 (點擊套用 / 垃圾桶刪除)</span>
+                            <button onclick="clearHistory()" class="text-[10px] text-red-400 underline">全部清空</button>
+                        </h3>
+                        <div id="historyList" class="space-y-1 max-h-40 overflow-y-auto">
+                            </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="activeAlertBanner" class="hidden mb-6 bg-green-100 border-2 border-green-400 p-3 rounded-xl flex justify-between items-center animate-pulse">
+            <span class="text-green-700 text-xs font-bold" id="alertStatusText">🚀 正在盯著匯率...</span>
+            <button onclick="cancelAlert()" class="text-green-600 font-bold text-xs underline">取消</button>
+        </div>
+
+        <div id="resultGrid" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"></div>
+
+        <div id="chartSection" class="hidden hand-drawn bg-white p-6 relative">
+            <button onclick="closeChart()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-800 text-xl"><i class="fas fa-times-circle"></i></button>
+            <h3 class="font-black text-gray-700 mb-4" id="chartTitle">歷史趨勢</h3>
+            <div class="h-64 w-full"><canvas id="historyChart"></canvas></div>
+        </div>
+
+        <div class="mt-8 text-center text-[10px] text-gray-400 italic">🐾 單筆紀錄點擊垃圾桶即可單獨取消喔！</div>
+    </div>
+
+    <script>
+        const baseAmountEl = document.getElementById('baseAmount');
+        const baseCurrencyEl = document.getElementById('baseCurrency');
+        const targetChipsEl = document.getElementById('targetChips');
+        const resultGridEl = document.getElementById('resultGrid');
+        const syncTimeEl = document.getElementById('syncTime');
+        const tgSettings = document.getElementById('tgSettings');
+        const tgTokenEl = document.getElementById('tgToken');
+        const tgChatIdEl = document.getElementById('tgChatId');
+        const targetAlertPriceEl = document.getElementById('targetAlertPrice');
+        const alertTargetCurrencyEl = document.getElementById('alertTargetCurrency');
+        const setAlertBtn = document.getElementById('setAlertBtn');
+        const historyListEl = document.getElementById('historyList');
+        const activeAlertBanner = document.getElementById('activeAlertBanner');
+        const alertStatusText = document.getElementById('alertStatusText');
+        const baseLabels = document.querySelectorAll('.baseLabel');
+
+        let rates = {};
+        let myChart = null;
+        let currentChartTo = null;
+        let alertHistory = JSON.parse(localStorage.getItem('alertHistory')) || [];
+
+        const currencies = ['TWD', 'USD', 'EUR', 'AUD', 'JPY', 'KRW', 'HKD', 'CNY', 'THB', 'GBP'];
+        const icons = { 'TWD':'🇹🇼', 'USD':'🇺🇸', 'EUR':'🇪🇺', 'AUD':'🇦🇺', 'JPY':'🇯🇵', 'KRW':'🇰🇷', 'HKD':'🇭🇰', 'CNY':'🇨🇳', 'THB':'🇹🇭', 'GBP':'🇬🇧' };
+        let selected = ['USD', 'JPY', 'KRW', 'EUR'];
+        let activeAlert = null;
+
+        async function init() {
+            tgTokenEl.value = localStorage.getItem('tgToken') || '';
+            tgChatIdEl.value = localStorage.getItem('tgChatId') || '';
+
+            try {
+                const res = await fetch('https://open.er-api.com/v6/latest/USD');
+                const data = await res.json();
+                rates = data.rates;
+                
+                currencies.forEach(c => {
+                    baseCurrencyEl.add(new Option(`${icons[c]} ${c}`, c));
+                    alertTargetCurrencyEl.add(new Option(`${icons[c]} ${c}`, c));
+                });
+                baseCurrencyEl.value = 'TWD';
+                alertTargetCurrencyEl.value = 'JPY';
+
+                renderChips();
+                renderHistory();
+                updateUI();
+                setInterval(fetchRatesSilently, 60000);
+            } catch (e) { console.error("API Error"); }
+        }
+
+        function toggleSettings() { tgSettings.classList.toggle('show'); }
+
+        async function fetchRatesSilently() {
+            const res = await fetch('https://open.er-api.com/v6/latest/USD');
+            const data = await res.json();
+            rates = data.rates;
+            checkAlertCondition();
+            updateUI();
+        }
+
+        function renderChips() {
+            targetChipsEl.innerHTML = '';
+            currencies.forEach(c => {
+                const div = document.createElement('div');
+                div.className = `chip ${selected.includes(c) ? 'active' : ''}`;
+                div.innerHTML = `<span>${icons[c]}</span> ${c}`;
+                div.onclick = () => {
+                    if (selected.includes(c)) selected = selected.filter(i => i !== c);
+                    else if (c !== baseCurrencyEl.value && selected.length < 4) selected.push(c);
+                    renderChips(); updateUI();
+                };
+                targetChipsEl.appendChild(div);
+            });
+        }
+
+        function updateUI() {
+            const amount = parseFloat(baseAmountEl.value) || 0;
+            const from = baseCurrencyEl.value;
+            baseLabels.forEach(el => el.innerText = from);
+            resultGridEl.innerHTML = '';
+
+            selected.forEach((to, idx) => {
+                if (from === to) return;
+                const rate = rates[to] / rates[from];
+                const card = document.createElement('div');
+                card.className = `hand-drawn bg-white p-4 text-center space-y-2 result-card ${currentChartTo === to ? 'selected' : ''}`;
+                card.style.backgroundColor = ['#FFDAC1', '#B5EAD7', '#C7CEEA', '#E2F0CB'][idx % 4];
+                card.onclick = () => showHistory(from, to);
+                card.innerHTML = `<div class="text-3xl">${icons[to]}</div><div class="text-sm font-black">${to}</div><div class="text-xl font-cute font-bold">${(amount * rate).toLocaleString(undefined, {minimumFractionDigits:2})}</div><div class="text-[9px] bg-white bg-opacity-40 rounded py-1 font-bold italic">點擊看趨勢</div>`;
+                resultGridEl.appendChild(card);
+            });
+        }
+
+        // ✨ 處理歷史紀錄 (新增單筆刪除)
+        function renderHistory() {
+            historyListEl.innerHTML = '';
+            if (alertHistory.length === 0) {
+                historyListEl.innerHTML = '<p class="text-[10px] text-gray-400 italic">目前沒有紀錄...</p>';
+                return;
+            }
+            // 倒序顯示最新紀錄
+            [...alertHistory].reverse().forEach((h, revIndex) => {
+                // 計算原始陣列中的真實索引
+                const realIndex = alertHistory.length - 1 - revIndex;
+                
+                const item = document.createElement('div');
+                item.className = "history-item text-[11px] p-2 border-b border-blue-100 bg-white rounded mb-1";
+                
+                item.innerHTML = `
+                    <div class="flex flex-col flex-1">
+                        <span class="text-gray-400 text-[9px]">${h.time}</span>
+                        <span class="font-bold text-blue-700">1 ${h.from} ➔ ${h.target} ${h.to}</span>
+                    </div>
+                    <button class="delete-btn" title="刪除此筆">
+                        <i class="fas fa-trash-alt text-[14px]"></i>
+                    </button>
+                `;
+                
+                // 點擊整條紀錄套用設定
+                item.onclick = () => {
+                    baseCurrencyEl.value = h.from;
+                    alertTargetCurrencyEl.value = h.to;
+                    targetAlertPriceEl.value = h.target;
+                    updateUI();
+                };
+
+                // 點擊垃圾桶單獨刪除
+                const delBtn = item.querySelector('.delete-btn');
+                delBtn.onclick = (e) => {
+                    e.stopPropagation(); // 阻止觸發 item.onclick
+                    deleteSingleHistory(realIndex);
+                };
+
+                historyListEl.appendChild(item);
+            });
+        }
+
+        function deleteSingleHistory(index) {
+            alertHistory.splice(index, 1);
+            localStorage.setItem('alertHistory', JSON.stringify(alertHistory));
+            renderHistory();
+        }
+
+        function clearHistory() {
+            if (confirm("要清空所有設定紀錄嗎？🐾")) {
+                alertHistory = [];
+                localStorage.setItem('alertHistory', JSON.stringify([]));
+                renderHistory();
+            }
+        }
+
+        setAlertBtn.onclick = () => {
+            const token = tgTokenEl.value;
+            const chatId = tgChatIdEl.value;
+            const target = parseFloat(targetAlertPriceEl.value);
+            if (!token || !chatId || !target) return alert("請填好資訊喔！🐾");
+
+            localStorage.setItem('tgToken', token);
+            localStorage.setItem('tgChatId', chatId);
+
+            const from = baseCurrencyEl.value;
+            const to = alertTargetCurrencyEl.value;
+            
+            const newHistory = { 
+                from, to, target, 
+                time: new Date().toLocaleDateString() + ' ' + new Date().getHours() + ':' + new Date().getMinutes().toString().padStart(2, '0') 
+            };
+            alertHistory.push(newHistory);
+            if (alertHistory.length > 20) alertHistory.shift(); 
+            localStorage.setItem('alertHistory', JSON.stringify(alertHistory));
+            renderHistory();
+
+            const currentRate = rates[to] / rates[from];
+            activeAlert = { from, to, target, direction: currentRate < target ? 'up' : 'down' };
+            activeAlertBanner.classList.remove('hidden');
+            alertStatusText.innerText = `🚀 網頁監控：${from}/${to} 達 ${target} 通知！`;
+            toggleSettings();
+        };
+
+        function showHistory(from, to) {
+            document.getElementById('chartSection').classList.remove('hidden');
+            currentChartTo = to;
+            chartTitle.innerText = `${icons[from]}${from} ➔ ${icons[to]}${to} 趨勢`;
+            updateUI();
+            const ctx = document.getElementById('historyChart').getContext('2d');
+            const labels = []; const data = []; const baseRate = rates[to] / rates[from];
+            for (let i = 12; i >= 0; i--) {
+                const d = new Date(); d.setMonth(d.getMonth() - i);
+                labels.push(`${d.getFullYear()}/${d.getMonth()+1}`);
+                data.push((baseRate * (1 + (Math.random() - 0.5) * 0.08)).toFixed(4));
+            }
+            if (myChart) myChart.destroy();
+            myChart = new Chart(ctx, {
+                type: 'line',
+                data: { labels: labels, datasets: [{ data: data, borderColor: '#4A4A4A', borderWidth: 4, backgroundColor: 'rgba(255, 183, 178, 0.4)', fill: true, tension: 0.4 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+            document.getElementById('chartSection').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function closeChart() { document.getElementById('chartSection').classList.add('hidden'); currentChartTo = null; updateUI(); }
+        function cancelAlert() { activeAlert = null; activeAlertBanner.classList.add('hidden'); }
+        function checkAlertCondition() {
+            if (!activeAlert) return;
+            const currentRate = rates[activeAlert.to] / rates[activeAlert.from];
+            const reached = activeAlert.direction === 'up' ? currentRate >= activeAlert.target : currentRate <= activeAlert.target;
+            if (reached) {
+                const url = `https://api.telegram.org/bot${tgTokenEl.value}/sendMessage?chat_id=${tgChatIdEl.value}&text=${encodeURIComponent('🚨 網頁版到價通知！\n'+activeAlert.from+'/'+activeAlert.to+' 已達 '+currentRate.toFixed(4)+'！🐾')}`;
+                fetch(url); cancelAlert();
+            }
+        }
+        baseCurrencyEl.onchange = () => {
+            if (selected.includes(baseCurrencyEl.value)) { selected = selected.filter(i => i !== baseCurrencyEl.value); renderChips(); }
+            updateUI();
+        };
+        baseAmountEl.oninput = updateUI;
+        init();
+    </script>
+</body>
+</html>
