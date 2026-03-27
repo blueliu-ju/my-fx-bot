@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title> 匯率小幫手 🤖 </title>
+    <title>🐘🌧 匯率小幫手 🐾</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@500;900&family=Pangolin&display=swap" rel="stylesheet">
@@ -30,7 +30,7 @@
 
     <div class="max-w-4xl mx-auto">
         <div class="text-center mb-10 relative">
-            <h1 class="text-4xl font-black text-orange-600 tracking-wider">✈️📈 匯率轉換小幫手 ✨ </h1>
+            <h1 class="text-4xl font-black text-orange-600 tracking-wider">✈️📈 匯率轉換小幫手 ✨</h1>
             <div class="mt-3">
                 <div class="bg-orange-100 px-4 py-1 rounded-xl border-2 border-orange-200 inline-block font-cute font-bold text-orange-800">
                     📅 <span id="currentDateTime">讀取中...</span>
@@ -53,7 +53,7 @@
 
             <div id="tgSettings" class="bg-blue-50 border-4 border-dashed border-blue-200 p-5 rounded-3xl mt-4">
                 <h3 class="font-black text-blue-600 mb-3 flex justify-between items-center">
-                    <span>⚙️ 管理員模式</span>
+                    <span>⚙️ 管理員模式 (密碼: 8888)</span>
                     <button onclick="toggleSettings(false)" class="text-xs bg-blue-200 px-2 py-1 rounded-lg">隱藏設定</button>
                 </h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -63,7 +63,6 @@
                         <button onclick="sendTestMsg()" class="bg-blue-400 text-white px-3 py-1 rounded-xl text-xs font-bold hover:bg-blue-500">測試</button>
                     </div>
                 </div>
-
                 <div class="flex flex-wrap items-center gap-3 font-bold text-blue-800 bg-white p-4 rounded-2xl border-2 border-blue-100 mb-4">
                     <span>📢 1 <span class="baseLabel">TWD</span> 達到</span>
                     <input type="number" id="targetAlertPrice" step="0.001" placeholder="目標價" class="w-24 p-2 border-2 border-blue-300 rounded-xl text-center outline-none">
@@ -89,7 +88,20 @@
 
     <script>
         const ADMIN_PASSWORD = "8888"; 
-        const themes = { 'TWD': { icon: '🇹🇼', deco: '🧋', name: '台幣', color: '#E0F2F1' }, 'USD': { icon: '🇺🇸', deco: '🗽', name: '美金', color: '#E3F2FD' }, 'EUR': { icon: '🇪🇺', deco: '🏟️', name: '歐元', color: '#F3E5F5' }, 'AUD': { icon: '🇦🇺', deco: '🐨', name: '澳幣', color: '#FFF3E0' }, 'JPY': { icon: '🇯🇵', deco: '🗻', name: '日幣', color: '#FFEBEE' }, 'KRW': { icon: '🇰🇷', deco: '🎎', name: '韓幣', color: '#F9FBE7' }, 'HKD': { icon: '🇭🇰', deco: '🏙️', name: '港幣', color: '#EFEBE9' }, 'CNY': { icon: '🇨🇳', deco: '🐼', name: '人民幣', color: '#FFEBEE' }, 'THB': { icon: '🇹🇭', deco: '🐘', name: '泰銖', color: '#E0F7FA' }, 'GBP': { icon: '🇬🇧', deco: '🏰', name: '英鎊', color: '#E8EAF6' } };
+        
+        // 🎯 核心修改：將 TWD 的 icon 從國旗換成珍珠奶茶 (🧋)
+        const themes = { 
+            'TWD': { icon: '🇹🇼', deco: '🧋', name: '台幣', color: '#E0F2F1' }, 
+            'USD': { icon: '🇺🇸', deco: '🗽', name: '美金', color: '#E3F2FD' }, 
+            'EUR': { icon: '🇪🇺', deco: '🏟️', name: '歐元', color: '#F3E5F5' }, 
+            'AUD': { icon: '🇦🇺', deco: '🐨', name: '澳幣', color: '#FFF3E0' }, 
+            'JPY': { icon: '🇯🇵', deco: '🗻', name: '日幣', color: '#FFEBEE' }, 
+            'KRW': { icon: '🇰🇷', deco: '🎎', name: '韓幣', color: '#F9FBE7' }, 
+            'HKD': { icon: '🇭🇰', deco: '🏙️', name: '港幣', color: '#EFEBE9' }, 
+            'CNY': { icon: '🇨🇳', deco: '🐼', name: '人民幣', color: '#FFEBEE' }, 
+            'THB': { icon: '🇹🇭', deco: '🐘', name: '泰銖', color: '#E0F7FA' }, 
+            'GBP': { icon: '🇬🇧', deco: '🏰', name: '英鎊', color: '#E8EAF6' } 
+        };
         const currencies = Object.keys(themes);
         let selected = ['USD', 'EUR', 'JPY', 'AUD'], rates = {}, alertHistory = JSON.parse(localStorage.getItem('alertHistory')) || [];
 
@@ -101,42 +113,39 @@
             else if (pass !== null) alert("❌ 密碼錯誤！🐾");
         }
 
-       async function init() {
-    updateTime(); setInterval(updateTime, 1000);
-    document.getElementById('tgToken').value = localStorage.getItem('tgToken') || '';
-    document.getElementById('tgChatId').value = localStorage.getItem('tgChatId') || '';
+        async function init() {
+            updateTime(); setInterval(updateTime, 1000);
+            document.getElementById('tgToken').value = localStorage.getItem('tgToken') || '';
+            document.getElementById('tgChatId').value = localStorage.getItem('tgChatId') || '';
 
-    // 🌍 新增：偵測用戶所在國家
-    let detectedCurrency = 'TWD'; // 預設值
-    try {
-        const geoRes = await fetch('https://ipapi.co/json/');
-        const geoData = await geoRes.json();
-        // 假設回傳國家代碼為 TW, JP, US 等，我們加上 'D' 變成 TWD, JPY, USD
-        const localCurrency = geoData.currency; 
-        if (currencies.includes(localCurrency)) {
-            detectedCurrency = localCurrency;
-            console.log("偵測到所在地幣別：" + detectedCurrency);
+            // 🌍 偵測國家與自動切換邏輯
+            let detectedCurrency = 'TWD';
+            try {
+                const geoRes = await fetch('https://ipapi.co/json/');
+                const geoData = await geoRes.json();
+                const localCurrency = geoData.currency;
+                if (currencies.includes(localCurrency)) {
+                    detectedCurrency = localCurrency;
+                    // ✨ 核心邏輯：如果偵測到非台幣，將台幣加入選取的卡片中
+                    if (detectedCurrency !== 'TWD' && !selected.includes('TWD')) {
+                        selected.unshift('TWD'); // 把台幣塞到第一個
+                        if (selected.length > 4) selected.pop(); // 保持 4 個
+                    }
+                }
+            } catch (e) { console.log("定位失敗"); }
+
+            try {
+                const res = await fetch('https://open.er-api.com/v6/latest/USD');
+                const data = await res.json(); rates = data.rates;
+                currencies.forEach(c => {
+                    document.getElementById('baseCurrency').add(new Option(`${themes[c].icon} ${c}`, c));
+                    document.getElementById('alertTargetCurrency').add(new Option(`${themes[c].icon} ${c}`, c));
+                });
+                document.getElementById('baseCurrency').value = detectedCurrency;
+                renderChips(); renderHistory(); updateUI();
+                setInterval(fetchRates, 60000);
+            } catch (e) {}
         }
-    } catch (e) {
-        console.log("無法取得所在地資訊，使用預設台幣。");
-    }
-
-    try {
-        const res = await fetch('https://open.er-api.com/v6/latest/USD');
-        const data = await res.json(); rates = data.rates;
-        
-        currencies.forEach(c => {
-            document.getElementById('baseCurrency').add(new Option(`${themes[c].icon} ${c}`, c));
-            document.getElementById('alertTargetCurrency').add(new Option(`${themes[c].icon} ${c}`, c));
-        });
-
-        // 🎯 自動設定預設幣別
-        document.getElementById('baseCurrency').value = detectedCurrency;
-        
-        renderChips(); renderHistory(); updateUI();
-        setInterval(fetchRates, 60000);
-    } catch (e) { console.error("API error"); }
-}
 
         function toggleSettings(show) { const el = document.getElementById('tgSettings'); if (show) el.classList.add('show'); else el.classList.remove('show'); }
 
@@ -187,10 +196,7 @@
         function updateUI() {
             const amount = parseFloat(document.getElementById('baseAmount').value) || 0, from = document.getElementById('baseCurrency').value, grid = document.getElementById('resultGrid');
             grid.innerHTML = ''; document.querySelectorAll('.baseLabel').forEach(el => el.innerText = from);
-            
-            // 重要：過濾掉與基準幣相同的選取項
             const activeDisplay = selected.filter(to => to !== from);
-            
             activeDisplay.forEach(to => {
                 const rate = rates[to] / rates[from], card = document.createElement('div');
                 card.className = `hand-drawn p-6 text-center result-card`;
@@ -205,24 +211,15 @@
         function renderChips() {
             const container = document.getElementById('targetChips'), currentBase = document.getElementById('baseCurrency').value;
             container.innerHTML = '';
-            
-            // 計算「扣除掉目前基準幣」後，還剩下幾個選取的幣別
             const actualCount = selected.filter(c => c !== currentBase).length;
-
             currencies.forEach(c => {
                 const div = document.createElement('div'), isBase = c === currentBase, isActive = selected.includes(c);
                 div.className = `chip ${isActive ? 'active' : ''} ${isBase ? 'disabled' : ''}`;
                 div.innerHTML = `${themes[c].icon} ${c}`;
-                
                 div.onclick = () => {
                     if (isBase) return;
-                    if (isActive) {
-                        selected = selected.filter(x => x !== c);
-                    } else {
-                        // 這裡修正判斷：只看扣掉基準幣後還有沒有空間
-                        if (actualCount >= 4) return alert("下方最多顯示 4 個最愛幣別喔！🐾");
-                        selected.push(c);
-                    }
+                    if (isActive) selected = selected.filter(x => x !== c);
+                    else { if (actualCount >= 4) return alert("下方最多顯示 4 個喔！🐾"); selected.push(c); }
                     updateUI(); 
                 };
                 container.appendChild(div);
