@@ -2,15 +2,23 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>可愛匯率小管家 🐾</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"> <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>可愛匯率趨勢小管家 🐾</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@500;900&family=Pangolin&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
     <style>
-        body { font-family: 'Noto Sans TC', sans-serif; background-color: #FDF6F0; color: #4A4A4A; }
+        /* 3. 修正 Emoji 在 Chrome 上的顯示問題，加入系統備用字體 */
+        body { 
+            font-family: 'Noto Sans TC', "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji", sans-serif; 
+            background-color: #FDF6F0; 
+            color: #4A4A4A; 
+            -webkit-font-smoothing: antialiased;
+        }
         .font-cute { font-family: 'Pangolin', cursive; }
         .hand-drawn { border: 3px solid #4A4A4A; box-shadow: 6px 6px 0px #4A4A4A; border-radius: 20px; }
         .chip { cursor: pointer; padding: 8px 16px; border: 2px solid #4A4A4A; border-radius: 50px; background: white; transition: all 0.2s; font-weight: bold; display: flex; align-items: center; gap: 4px; }
@@ -21,7 +29,7 @@
         .result-card.selected { border-width: 5px; border-color: #4A4A4A; }
         
         #tgSettings { transition: all 0.3s ease-in-out; max-height: 0; overflow: hidden; opacity: 0; }
-        #tgSettings.show { max-height: 800px; opacity: 1; margin-top: 1rem; }
+        #tgSettings.show { max-height: 1000px; opacity: 1; margin-top: 1rem; }
         
         .history-item { cursor: pointer; transition: background 0.2s; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
         .history-item:hover { background-color: #E0F2F1; }
@@ -34,9 +42,9 @@
     <div class="max-w-4xl mx-auto">
         <div class="text-center mb-8 relative">
             <h1 class="text-4xl font-black flex justify-center items-center gap-3">
-                <span class="text-3xl">📊</span> 匯率小幫手 <span class="text-3xl">🐾</span>
+                <span>📊</span> 匯率趨勢管家 <span>🐾</span>
             </h1>
-            <p class="mt-2 font-bold text-gray-500 italic">方便又好用的匯率幣別轉換工具！</p>
+            <p class="mt-2 font-bold text-gray-500 italic">點擊卡片看趨勢，圖示相容性已更新！</p>
             
             <button onclick="toggleSettings()" class="absolute top-0 right-0 text-gray-400 hover:text-blue-500 transition-colors">
                 <i class="fas fa-cog text-2xl"></i>
@@ -46,9 +54,9 @@
         <div class="grid grid-cols-1 gap-6 mb-8">
             <div class="hand-drawn bg-white p-6 space-y-4">
                 <div class="flex flex-wrap justify-between items-center gap-4">
-                    <label class="font-black text-lg underline decoration-pink-300">💰 輸入金額和選擇幣別</label>
+                    <label class="font-black text-lg underline decoration-pink-300">💰 換多少錢呢？</label>
                     <div class="flex gap-3 flex-1 min-w-[280px]">
-                        <input type="number" id="baseAmount" value="300" class="w-full text-3xl font-cute p-3 border-4 border-gray-800 rounded-2xl focus:outline-none">
+                        <input type="number" id="baseAmount" value="1" class="w-full text-3xl font-cute p-3 border-4 border-gray-800 rounded-2xl focus:outline-none">
                         <select id="baseCurrency" class="border-4 border-gray-800 rounded-2xl px-4 font-bold bg-blue-100 cursor-pointer"></select>
                     </div>
                 </div>
@@ -72,7 +80,7 @@
                             <span>1 <span class="baseLabel">TWD</span> 達</span>
                             <input type="number" id="targetAlertPrice" step="0.001" placeholder="目標價" class="w-20 p-1 border-2 border-blue-400 rounded-lg">
                             <select id="alertTargetCurrency" class="p-1 border-2 border-blue-400 rounded-lg bg-white"></select>
-                            <button id="setAlertBtn" class="bg-blue-500 text-white px-4 py-1 rounded-lg border-2 border-blue-700 hover:bg-blue-600 ml-auto">啟動並記錄</button>
+                            <button id="setAlertBtn" class="bg-blue-500 text-white px-4 py-1 rounded-lg border-2 border-blue-700 hover:bg-blue-600 ml-auto transition-all">啟動並記錄</button>
                         </div>
                     </div>
 
@@ -81,8 +89,7 @@
                             <span>📜 最近設定紀錄 (點擊套用 / 垃圾桶刪除)</span>
                             <button onclick="clearHistory()" class="text-[10px] text-red-400 underline">全部清空</button>
                         </h3>
-                        <div id="historyList" class="space-y-1 max-h-40 overflow-y-auto">
-                            </div>
+                        <div id="historyList" class="space-y-1 max-h-40 overflow-y-auto"></div>
                     </div>
                 </div>
             </div>
@@ -101,7 +108,7 @@
             <div class="h-64 w-full"><canvas id="historyChart"></canvas></div>
         </div>
 
-        <div class="mt-8 text-center text-[10px] text-gray-400 italic">🐾 單筆紀錄點擊垃圾桶即可單獨取消喔！</div>
+        <div class="mt-8 text-center text-[10px] text-gray-400 italic">🐾 若圖示無法顯示，請嘗試更新您的 Chrome 瀏覽器。</div>
     </div>
 
     <script>
@@ -109,7 +116,6 @@
         const baseCurrencyEl = document.getElementById('baseCurrency');
         const targetChipsEl = document.getElementById('targetChips');
         const resultGridEl = document.getElementById('resultGrid');
-        const syncTimeEl = document.getElementById('syncTime');
         const tgSettings = document.getElementById('tgSettings');
         const tgTokenEl = document.getElementById('tgToken');
         const tgChatIdEl = document.getElementById('tgChatId');
@@ -128,7 +134,8 @@
 
         const currencies = ['TWD', 'USD', 'EUR', 'AUD', 'JPY', 'KRW', 'HKD', 'CNY', 'THB', 'GBP'];
         const icons = { 'TWD':'🇹🇼', 'USD':'🇺🇸', 'EUR':'🇪🇺', 'AUD':'🇦🇺', 'JPY':'🇯🇵', 'KRW':'🇰🇷', 'HKD':'🇭🇰', 'CNY':'🇨🇳', 'THB':'🇹🇭', 'GBP':'🇬🇧' };
-        let selected = ['USD', 'JPY', 'KRW', 'EUR'];
+        
+        let selected = ['USD', 'EUR', 'AUD', 'JPY'];
         let activeAlert = null;
 
         async function init() {
@@ -144,6 +151,7 @@
                     baseCurrencyEl.add(new Option(`${icons[c]} ${c}`, c));
                     alertTargetCurrencyEl.add(new Option(`${icons[c]} ${c}`, c));
                 });
+                
                 baseCurrencyEl.value = 'TWD';
                 alertTargetCurrencyEl.value = 'JPY';
 
@@ -157,11 +165,13 @@
         function toggleSettings() { tgSettings.classList.toggle('show'); }
 
         async function fetchRatesSilently() {
-            const res = await fetch('https://open.er-api.com/v6/latest/USD');
-            const data = await res.json();
-            rates = data.rates;
-            checkAlertCondition();
-            updateUI();
+            try {
+                const res = await fetch('https://open.er-api.com/v6/latest/USD');
+                const data = await res.json();
+                rates = data.rates;
+                checkAlertCondition();
+                updateUI();
+            } catch(e) {}
         }
 
         function renderChips() {
@@ -192,51 +202,31 @@
                 card.className = `hand-drawn bg-white p-4 text-center space-y-2 result-card ${currentChartTo === to ? 'selected' : ''}`;
                 card.style.backgroundColor = ['#FFDAC1', '#B5EAD7', '#C7CEEA', '#E2F0CB'][idx % 4];
                 card.onclick = () => showHistory(from, to);
-                card.innerHTML = `<div class="text-3xl">${icons[to]}</div><div class="text-sm font-black">${to}</div><div class="text-xl font-cute font-bold">${(amount * rate).toLocaleString(undefined, {minimumFractionDigits:2})}</div><div class="text-[9px] bg-white bg-opacity-40 rounded py-1 font-bold italic">點擊看趨勢</div>`;
+                card.innerHTML = `<div class="text-3xl">${icons[to]}</div><div class="text-sm font-black">${to}</div><div class="text-xl font-cute font-bold">${(amount * rate).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:4})}</div><div class="text-[9px] bg-white bg-opacity-40 rounded py-1 font-bold italic">點擊看趨勢</div>`;
                 resultGridEl.appendChild(card);
             });
         }
 
-        // ✨ 處理歷史紀錄 (新增單筆刪除)
         function renderHistory() {
             historyListEl.innerHTML = '';
             if (alertHistory.length === 0) {
                 historyListEl.innerHTML = '<p class="text-[10px] text-gray-400 italic">目前沒有紀錄...</p>';
                 return;
             }
-            // 倒序顯示最新紀錄
             [...alertHistory].reverse().forEach((h, revIndex) => {
-                // 計算原始陣列中的真實索引
                 const realIndex = alertHistory.length - 1 - revIndex;
-                
                 const item = document.createElement('div');
                 item.className = "history-item text-[11px] p-2 border-b border-blue-100 bg-white rounded mb-1";
-                
                 item.innerHTML = `
-                    <div class="flex flex-col flex-1">
+                    <div class="flex flex-col flex-1 text-left">
                         <span class="text-gray-400 text-[9px]">${h.time}</span>
                         <span class="font-bold text-blue-700">1 ${h.from} ➔ ${h.target} ${h.to}</span>
                     </div>
-                    <button class="delete-btn" title="刪除此筆">
-                        <i class="fas fa-trash-alt text-[14px]"></i>
-                    </button>
+                    <button class="delete-btn" title="刪除此筆"><i class="fas fa-trash-alt text-[14px]"></i></button>
                 `;
-                
-                // 點擊整條紀錄套用設定
-                item.onclick = () => {
-                    baseCurrencyEl.value = h.from;
-                    alertTargetCurrencyEl.value = h.to;
-                    targetAlertPriceEl.value = h.target;
-                    updateUI();
-                };
-
-                // 點擊垃圾桶單獨刪除
+                item.onclick = () => { baseCurrencyEl.value = h.from; alertTargetCurrencyEl.value = h.to; targetAlertPriceEl.value = h.target; updateUI(); };
                 const delBtn = item.querySelector('.delete-btn');
-                delBtn.onclick = (e) => {
-                    e.stopPropagation(); // 阻止觸發 item.onclick
-                    deleteSingleHistory(realIndex);
-                };
-
+                delBtn.onclick = (e) => { e.stopPropagation(); deleteSingleHistory(realIndex); };
                 historyListEl.appendChild(item);
             });
         }
@@ -249,33 +239,20 @@
 
         function clearHistory() {
             if (confirm("要清空所有設定紀錄嗎？🐾")) {
-                alertHistory = [];
-                localStorage.setItem('alertHistory', JSON.stringify([]));
-                renderHistory();
+                alertHistory = []; localStorage.setItem('alertHistory', JSON.stringify([])); renderHistory();
             }
         }
 
         setAlertBtn.onclick = () => {
-            const token = tgTokenEl.value;
-            const chatId = tgChatIdEl.value;
-            const target = parseFloat(targetAlertPriceEl.value);
+            const token = tgTokenEl.value; const chatId = tgChatIdEl.value; const target = parseFloat(targetAlertPriceEl.value);
             if (!token || !chatId || !target) return alert("請填好資訊喔！🐾");
-
-            localStorage.setItem('tgToken', token);
-            localStorage.setItem('tgChatId', chatId);
-
-            const from = baseCurrencyEl.value;
-            const to = alertTargetCurrencyEl.value;
-            
-            const newHistory = { 
-                from, to, target, 
-                time: new Date().toLocaleDateString() + ' ' + new Date().getHours() + ':' + new Date().getMinutes().toString().padStart(2, '0') 
-            };
+            localStorage.setItem('tgToken', token); localStorage.setItem('tgChatId', chatId);
+            const from = baseCurrencyEl.value; const to = alertTargetCurrencyEl.value;
+            const newHistory = { from, to, target, time: new Date().toLocaleDateString() + ' ' + new Date().getHours() + ':' + new Date().getMinutes().toString().padStart(2, '0') };
             alertHistory.push(newHistory);
             if (alertHistory.length > 20) alertHistory.shift(); 
             localStorage.setItem('alertHistory', JSON.stringify(alertHistory));
             renderHistory();
-
             const currentRate = rates[to] / rates[from];
             activeAlert = { from, to, target, direction: currentRate < target ? 'up' : 'down' };
             activeAlertBanner.classList.remove('hidden');
