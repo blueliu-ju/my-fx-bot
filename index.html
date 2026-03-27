@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>可愛匯率小管家 🐾</title>
+    <title>匯率小幫手 🐾</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@500;900&family=Pangolin&display=swap" rel="stylesheet">
@@ -30,7 +30,7 @@
 
     <div class="max-w-4xl mx-auto">
         <div class="text-center mb-10 relative">
-            <h1 class="text-4xl font-black text-orange-600 tracking-wider">✨ 匯率趨勢管家 ✨</h1>
+            <h1 class="text-4xl font-black text-orange-600 tracking-wider">✨ 匯率轉換小幫手 ✨</h1>
             <div class="mt-3">
                 <div class="bg-orange-100 px-4 py-1 rounded-xl border-2 border-orange-200 inline-block font-cute font-bold text-orange-800">
                     📅 <span id="currentDateTime">讀取中...</span>
@@ -81,6 +81,9 @@
             <button onclick="closeChart()" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 text-2xl"><i class="fas fa-times-circle"></i></button>
             <h3 class="text-2xl font-black text-gray-700 mb-6">📈 <span id="displayChartTitle">趨勢分析</span></h3>
             <div class="h-64 w-full"><canvas id="historyChart"></canvas></div>
+        </div>
+        <div class="mt-8 text-center text-[10px] text-gray-400">
+            更新時間：<span id="syncTime">--:--:--</span> | 🐾 此網頁為bluelie版權所有
         </div>
     </div>
 
