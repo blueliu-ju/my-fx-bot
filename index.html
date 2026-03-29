@@ -97,7 +97,10 @@
         };
         const currencies = Object.keys(themes);
         let selected = ['USD', 'JPY', 'KRW', 'EUR'], rates = {}, myChart = null, alertHistory = JSON.parse(localStorage.getItem('alertHistory')) || [];
-
+const countryToCurrency = {
+    'TW': 'TWD', 'US': 'USD', 'JP': 'JPY', 'KR': 'KRW', 
+    'AU': 'AUD', 'HK': 'HKD', 'CN': 'CNY', 'TH': 'THB', 'GB': 'GBP'
+};
        async function init() {
     const baseSelect = document.getElementById('baseCurrency');
     const alertSelect = document.getElementById('alertTargetCurrency');
